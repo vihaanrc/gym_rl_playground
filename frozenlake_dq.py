@@ -6,7 +6,18 @@ import torch.nn as nn
 import torch.optim as optim
 from collections import deque
 
-
+class DQN(nn.Sequential):
+    def __init__(self, inputFeatures, l1OutNodes = None, outputFeatures = None):
+        if l1OutNodes is None:
+            l1OutNodes = inputFeatures
+        if outputFeatures is None:
+            outputFeatures = inputFeatures 
+        super().__init__(
+           nn.Linear(inputFeatures, l1OutNodes),
+           nn.ReLU(),
+           nn.Linear(inputFeatures, outputFeatures),
+           nn.ReLU())
+        
 #deque wrapper class that stores prior transitions for SGD
 class ExperienceReplay:
     def __init__(self, maxLen):
@@ -26,9 +37,14 @@ class ExperienceReplay:
 
 
 if __name__ == '__main__':
-    a = ExperienceReplay(5)
-    a.append(4)
-    a.append(3)
-    a.append(2)
-    print(a)
-    print(a.sample(2))
+    if torch.cuda.is_available():
+        device = ("cuda")
+    else:
+        device = ("cpu")
+
+    print(f"Using {device}")
+
+    exampleNet = DQN(5)
+    print(exampleNet)
+    
+    
