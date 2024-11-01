@@ -13,5 +13,5 @@ if __name__ == '__main__':
     print(f"Using {device}")
 
     frozen_lake = FrozenLakeDQL()
-    #frozen_lake.train(2000, is_slippery=False)
+    frozen_lake.train(2000, is_slippery=False)
     

@@ -5,7 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import random
-from collections import deque
 from foundation import *
 
 class FrozenLakeDQL():
@@ -30,21 +29,23 @@ class FrozenLakeDQL():
         num_states = env.observation_space.n
         num_actions = env.action_space.n
 
-        self.optimizer = torch.optim.Adam(policy_nn.parameters(), lr = self.learning_rate_a)
-        memory = ExperienceReplay(self.replay_memory_size)
-        reward_record = np.zeros(episodes)
+        
         policy_nn = DQN(inputFeatures = num_states, outputFeatures=num_actions)
         target_nn = DQN(inputFeatures = num_states, outputFeatures=num_actions)
 
         target_nn.load_state_dict(policy_nn.state_dict()) #sync nn's
         
+        self.optimizer = torch.optim.Adam(policy_nn.parameters(), lr = self.learning_rate_a)
+        memory = ExperienceReplay(self.replay_memory_size)
+        reward_record = np.zeros(episodes)
     
         step_count = 0
         for i in range(episodes):
             state = env.reset()[0]
-            terminated, truncated = False 
-            #terminated->reaches goal or falls in hole
-            #truncated -> 100 steps for 4x4 map.
+            terminated = False #terminated->reaches goal or falls in hole
+            truncated = False #truncated -> 100 steps for 4x4 map.
+            
+            
 
             while (not terminated and not truncated):
                 if random.uniform(0,1) < epsilon:
@@ -63,10 +64,11 @@ class FrozenLakeDQL():
                 step_count +=1
                 state = new_state
             if reward==1:
-                reward_record[episodes] = reward
+                reward_record[i] = reward
 
-            if (np.sum(reward_record)>1 and len(memory) > self.optimize_batch_size):
-                #To-do: Optimize Policy network based on sampled mini-batch from memory
+            if (np.sum(reward_record)>1 and len(memory.exp) > self.optimize_batch_size):
+                
+                self.optimize(memory.sample(self.optimize_batch_size), policy_nn, target_nn)
 
                 epsilon = max(epsilon-epsilon_decay_rate, 0)
                 if step_count > self.network_sync_rate:
@@ -74,3 +76,7 @@ class FrozenLakeDQL():
                     step_count=0
 
         env.close()
+
+    def optimize(self, batch, policy_nn, target_nn):
+        for state, action, new_state, reward, terminated in batch:
+            return
