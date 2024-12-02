@@ -12,9 +12,9 @@ class DQN(nn.Sequential):
             l1OutNodes = inputFeatures
         super().__init__(
            nn.Linear(inputFeatures, l1OutNodes),
-           nn.ReLU(),
-           nn.Linear(inputFeatures, outputFeatures),
-           nn.ReLU())
+           nn.ReLU(inplace=False),
+           nn.Linear(l1OutNodes, outputFeatures),
+           nn.ReLU(inplace=False))
         
 #deque wrapper class that stores prior transitions for SGD
 class ExperienceReplay:
