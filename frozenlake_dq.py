@@ -30,7 +30,8 @@ class FrozenLakeDQL():
 
         env = gym.make('FrozenLake-v1', map_name="4x4", is_slippery=is_slippery, render_mode='human' if render else None)
         self.num_states = env.observation_space.n
-        num_actions = env.action_space.n
+        self.num_actions = env.action_space.n
+        num_actions = self.num_actions
 
         
         policy_nn = DQN(inputFeatures = self.num_states, outputFeatures=num_actions)
@@ -55,11 +56,13 @@ class FrozenLakeDQL():
                 if random.uniform(0,1) < epsilon:
                     action = env.action_space.sample()
                 else:
-                    state_tensor = F.one_hot(torch.tensor(state), num_classes=self.num_states).float()
+                    
                     with torch.no_grad(): #disable weight updating when using model for prediction
+                        state_tensor = torch.zeros(self.num_states)
+                        state_tensor[state] = 1.0
                         q_values = policy_nn(state_tensor)
                     
-                    action = torch.argmax(q_values).item() #find action with highest value
+                        action = q_values.argmax().item() #find action with highest value
 
 
                 new_state,reward,terminated,truncated,_ = env.step(action)
@@ -92,16 +95,19 @@ class FrozenLakeDQL():
                 target = torch.FloatTensor([reward])
             else: 
                 with torch.no_grad():
-                    new_state_tensor = F.one_hot(torch.tensor(new_state), num_classes=self.num_states).float()
+                    new_state_tensor = torch.zeros(self.num_states)
+                    new_state_tensor[new_state] = 1.0
+                    
                     target = torch.FloatTensor(
                         reward + self.discount_factor_g * target_nn(new_state_tensor).max()
                     )
 
-            state_tensor = F.one_hot(torch.tensor(state), num_classes=self.num_states).float()
+            state_tensor = torch.zeros(self.num_states)
+            state_tensor[state] = 1.0
             current_q = policy_nn(state_tensor)
             current_q_list.append(current_q)
 
-            target_q = target_nn(state_tensor).clone() 
+            target_q = target_nn(state_tensor).clone()
             target_q[action] = target
             
             target_q_list.append(target_q)
@@ -131,7 +137,8 @@ class FrozenLakeDQL():
             truncated = False   
             while(not terminated and not truncated):    
                 with torch.no_grad():
-                    state_tensor = F.one_hot(torch.tensor(state), num_classes=self.num_states).float()
+                    state_tensor = torch.zeros(self.num_states)
+                    state_tensor[state] = 1.0
                     action = policy_nn(state_tensor).argmax().item()
 
                
