@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim
 import torch.nn.functional as F
 
-class Actor(nn.module):
+class Actor(nn.Module):
     def __init__(self, num_inputs, action_dim, h1_nodes):
         super().__init__()
 
@@ -18,7 +18,7 @@ class Actor(nn.module):
         x = F.tanh(self.fc3(x)) #constrain actions to between -1 and 1
         return x
     
-class Critic(nn.module):
+class Critic(nn.Module):
     def __init__(self, num_states, action_dim, h1_nodes):
         super().__init__()
 
